@@ -58,6 +58,8 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 
+void Determining_Power_Output_Status(void);
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

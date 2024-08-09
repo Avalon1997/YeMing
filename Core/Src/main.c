@@ -175,6 +175,26 @@ int fputc(int ch,FILE *f)
   return ch;
 }
 
+/**
+* @name       Determining_Power_Output_Status
+* @brief      To determine the status of power output
+*             and the corresponding actions.
+* @param      NONE
+* @return     NONE
+*
+*/
+void Determining_Power_Output_Status(void)
+{
+  if (global_power_status == POWER_ON)
+  { // Output the current power to the load.
+
+  }
+  else
+  { // Cut off the current power output.
+
+  }
+}
+
 /* USER CODE END 4 */
 
 /**

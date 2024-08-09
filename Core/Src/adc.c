@@ -22,6 +22,8 @@
 
 /* USER CODE BEGIN 0 */
 
+uint16_t adc_data = 0;
+
 /* USER CODE END 0 */
 
 ADC_HandleTypeDef hadc1;
@@ -59,7 +61,7 @@ void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_41CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -138,5 +140,27 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 }
 
 /* USER CODE BEGIN 1 */
+
+/**
+* @name       Get_ADC_Value_And_Calculate
+* @brief      Get the voltage of potentiometr
+*             and return the calculated power output percentage.
+* @param      NONE
+* @return     float
+*
+*/
+float Get_ADC_Value_And_Calculate(void)
+{
+  float power_percent = 0;
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t)adc_data, LENGTH_ADC);
+  power_percent = (adc_data / 4096) * 100;
+
+  if (power_percent < 0)
+    return 0;
+  else if(power_percent > 100)
+    return 100;
+  else
+    return power_percent;
+}
 
 /* USER CODE END 1 */
