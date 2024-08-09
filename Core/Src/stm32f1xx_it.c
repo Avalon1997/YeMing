@@ -22,6 +22,9 @@
 #include "stm32f1xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
+#include "usart.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -212,6 +215,15 @@ void EXTI1_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(BTN_Pin);
   /* USER CODE BEGIN EXTI1_IRQn 1 */
 
+  if (GPIO_PIN_SET == HAL_GPIO_ReadPin(P_GPIO_Port,P_Pin))
+  {
+    global_power_status = POWER_ON;
+  }
+  else if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(P_GPIO_Port,P_Pin))
+  {
+    global_power_status == POWER_OFF;
+  }
+
   /* USER CODE END EXTI1_IRQn 1 */
 }
 
@@ -267,6 +279,19 @@ void USART1_IRQHandler(void)
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
+
+
+  if (__HAL_UART_GET_FLAG(&huart1,UART_FLAG_IDLE) == SET )
+  {
+    __HAL_UART_CLEAR_IDLEFLAG(&huart1);
+    HAL_UART_DMAStop(&huart1);
+    usart_rx1_len = RX1BUFFERSIZE - __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);
+    memcpy(data_cache1,usart_rx1_buffer,usart_rx1_len);
+    
+    usart_rx1_len = 0;
+    memset(usart_rx1_buffer,0,RX1BUFFERSIZE);
+    HAL_UART_Receive_DMA(&huart1,usart_rx1_buffer,RX1BUFFERSIZE);
+  }
 
   /* USER CODE END USART1_IRQn 1 */
 }

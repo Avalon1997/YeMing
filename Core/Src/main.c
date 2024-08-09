@@ -47,6 +47,9 @@
 
 /* USER CODE BEGIN PV */
 
+enum_PowerStatusTypeDef global_power_status = POWER_OFF;    // global power output status: On/Off
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -103,6 +106,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+
   }
   /* USER CODE END 3 */
 }
@@ -154,6 +159,21 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+/**
+* @name       fputc
+* @brief      Printf redirection.
+* @param      ch
+* @param      f
+* @return     ch
+*
+*/
+int fputc(int ch,FILE *f)
+{
+  while ((USART2 -> SR & 0x40) == 0);
+  USART2 -> DR = (uint8_t)ch;
+  return ch;
+}
 
 /* USER CODE END 4 */
 

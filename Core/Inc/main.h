@@ -32,6 +32,10 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -64,6 +68,14 @@ void Error_Handler(void);
 #define BTN_EXTI_IRQn EXTI1_IRQn
 
 /* USER CODE BEGIN Private defines */
+
+typedef enum
+{
+  POWER_OFF = 0x00U,
+  POWER_ON  = 0x01U
+} enum_PowerStatusTypeDef;
+
+extern enum_PowerStatusTypeDef global_power_status;
 
 /* USER CODE END Private defines */
 

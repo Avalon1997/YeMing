@@ -36,6 +36,12 @@ extern UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN Private defines */
 
+#define RX1BUFFERSIZE 256
+
+extern uint8_t usart_rx1_buffer[RX1BUFFERSIZE];
+extern uint16_t usart_rx1_len;
+extern uint8_t data_cache1[RX1BUFFERSIZE];
+
 /* USER CODE END Private defines */
 
 void MX_USART1_UART_Init(void);
