@@ -38,8 +38,8 @@ extern UART_HandleTypeDef huart1;
 
 #define RX1BUFFERSIZE 256
 
-extern uint8_t usart_rx1_buffer[RX1BUFFERSIZE];
-extern uint16_t usart_rx1_len;
+extern uint8_t rx1_buffer[RX1BUFFERSIZE];
+extern uint16_t rx1_len;
 extern uint8_t data_cache1[RX1BUFFERSIZE];
 
 /* USER CODE END Private defines */

@@ -63,11 +63,41 @@ void Determining_Power_Output_Status(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define P_Pin GPIO_PIN_0
-#define P_GPIO_Port GPIOA
+#define P_IN_Pin GPIO_PIN_0
+#define P_IN_GPIO_Port GPIOA
 #define BTN_Pin GPIO_PIN_1
 #define BTN_GPIO_Port GPIOA
 #define BTN_EXTI_IRQn EXTI1_IRQn
+#define SW_Pin GPIO_PIN_2
+#define SW_GPIO_Port GPIOA
+#define ADD_Pin GPIO_PIN_3
+#define ADD_GPIO_Port GPIOA
+#define REDUCE_Pin GPIO_PIN_4
+#define REDUCE_GPIO_Port GPIOA
+#define ST_Pin GPIO_PIN_5
+#define ST_GPIO_Port GPIOA
+#define a_Pin GPIO_PIN_0
+#define a_GPIO_Port GPIOB
+#define b_Pin GPIO_PIN_1
+#define b_GPIO_Port GPIOB
+#define c_Pin GPIO_PIN_2
+#define c_GPIO_Port GPIOB
+#define A2_Pin GPIO_PIN_10
+#define A2_GPIO_Port GPIOB
+#define d_Pin GPIO_PIN_3
+#define d_GPIO_Port GPIOB
+#define e_Pin GPIO_PIN_4
+#define e_GPIO_Port GPIOB
+#define f_Pin GPIO_PIN_5
+#define f_GPIO_Port GPIOB
+#define g_Pin GPIO_PIN_6
+#define g_GPIO_Port GPIOB
+#define dp_Pin GPIO_PIN_7
+#define dp_GPIO_Port GPIOB
+#define A0_Pin GPIO_PIN_8
+#define A0_GPIO_Port GPIOB
+#define A1_Pin GPIO_PIN_9
+#define A1_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
@@ -78,6 +108,17 @@ typedef enum
 } enum_PowerStatusTypeDef;
 
 extern enum_PowerStatusTypeDef global_power_status;
+
+typedef enum
+{
+  DISPLAY_OFF     = 0x00U,
+  DISPLAY_HOUR    = 0x01U,
+  DISPLAY_MINUTE  = 0x02U,
+  DISPLAY_SECOND  = 0x03U,
+  DISPLAY_ALL     = 0x04U
+} enum_DisplayStatusTypeDef;
+
+extern enum_DisplayStatusTypeDef global_display_status;
 
 /* USER CODE END Private defines */
 

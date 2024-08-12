@@ -48,6 +48,9 @@
 /* USER CODE BEGIN PV */
 
 enum_PowerStatusTypeDef global_power_status = POWER_OFF;    // global power output status: On/Off
+enum_DisplayStatusTypeDef global_display_status = DISPLAY_OFF;  // global display clock status: Off/Hour/Minute/All
+
+int key_counter = 0;
 
 
 /* USER CODE END PV */
@@ -106,6 +109,53 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+    /* ----------  Key Scan Code ---------- */
+
+    // If the SW is reset.
+    if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
+    {
+      HAL_Delay(5);
+      if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
+      {
+        // Click Mode Operation: Switch the display(hour/minute).
+        if (DISPLAY_OFF == global_display_status)
+        {
+          global_display_status = DISPLAY_MINUTE;
+        }
+        else if (DISPLAY_MINUTE == global_display_status)
+        {
+          global_display_status = DISPLAY_HOUR;
+        }
+
+        // Start the 
+
+
+        while(key_counter != 1900)
+        {
+          if (GPIO_PIN_SET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
+          {
+            HAL_Delay(5);
+            if(GPIO_PIN_SET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
+            {
+              break;
+            }
+          }
+
+          // 1ms 计时，如果时间超过大约 2s 后将清除当前计时
+          HAL_Delay(1);
+          key_counter ++;
+          if(1900 == key_counter)
+          {
+            // 分钟小时位计数、显示全部置零
+            break;
+          }
+        }
+
+
+      }
+    }
+
 
 
   }
@@ -181,6 +231,7 @@ int fputc(int ch,FILE *f)
 *             and the corresponding actions.
 * @param      NONE
 * @return     NONE
+
 *
 */
 void Determining_Power_Output_Status(void)
@@ -194,6 +245,22 @@ void Determining_Power_Output_Status(void)
 
   }
 }
+
+void STM32_Init(void)
+{
+  // Start the USART1 DMA tranmit
+  HAL_UART_Transmit_DMA(&huart1,rx1_buffer,RX1BUFFERSIZE);
+
+
+}
+
+void LED_Display_Init(void)
+{
+
+
+}
+
+
 
 /* USER CODE END 4 */
 

@@ -215,11 +215,11 @@ void EXTI1_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(BTN_Pin);
   /* USER CODE BEGIN EXTI1_IRQn 1 */
 
-  if (GPIO_PIN_SET == HAL_GPIO_ReadPin(P_GPIO_Port,P_Pin))
+  if (GPIO_PIN_SET == HAL_GPIO_ReadPin(BTN_GPIO_Port,BTN_Pin))
   {
     global_power_status = POWER_ON;
   }
-  else if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(P_GPIO_Port,P_Pin))
+  else if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(BTN_GPIO_Port,BTN_Pin))
   {
     global_power_status == POWER_OFF;
   }
@@ -285,12 +285,12 @@ void USART1_IRQHandler(void)
   {
     __HAL_UART_CLEAR_IDLEFLAG(&huart1);
     HAL_UART_DMAStop(&huart1);
-    usart_rx1_len = RX1BUFFERSIZE - __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);
-    memcpy(data_cache1,usart_rx1_buffer,usart_rx1_len);
+    rx1_len = RX1BUFFERSIZE - __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);
+    memcpy(data_cache1,rx1_buffer,rx1_len);
     
-    usart_rx1_len = 0;
-    memset(usart_rx1_buffer,0,RX1BUFFERSIZE);
-    HAL_UART_Receive_DMA(&huart1,usart_rx1_buffer,RX1BUFFERSIZE);
+    rx1_len = 0;
+    memset(rx1_buffer,0,RX1BUFFERSIZE);
+    HAL_UART_Receive_DMA(&huart1,rx1_buffer,RX1BUFFERSIZE);
   }
 
   /* USER CODE END USART1_IRQn 1 */

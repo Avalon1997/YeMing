@@ -22,8 +22,8 @@
 
 /* USER CODE BEGIN 0 */
 
-uint8_t usart_rx1_buffer[RX1BUFFERSIZE] = {0};
-uint16_t usart_rx1_len = 0;
+uint8_t rx1_buffer[RX1BUFFERSIZE] = {0};
+uint16_t rx1_len = 0;
 uint8_t data_cache1[RX1BUFFERSIZE] = {0};
 
 /* USER CODE END 0 */
