@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "usart.h"
+#include "tim.h"
 
 /* USER CODE END Includes */
 
@@ -45,6 +46,10 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 
+static int display_convert;
+static uint8_t display_convert_hourbuffer[2] = {0x00, 0x00};
+static uint8_t display_convert_minutebuffer[2] = {0x00, 0x00};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,6 +64,7 @@
 
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc1;
+extern TIM_HandleTypeDef htim4;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 extern DMA_HandleTypeDef hdma_usart1_rx;
 extern UART_HandleTypeDef huart1;
@@ -212,14 +218,14 @@ void EXTI1_IRQHandler(void)
   /* USER CODE BEGIN EXTI1_IRQn 0 */
 
   /* USER CODE END EXTI1_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(BTN_Pin);
+  HAL_GPIO_EXTI_IRQHandler(PBTN_Pin);
   /* USER CODE BEGIN EXTI1_IRQn 1 */
 
-  if (GPIO_PIN_SET == HAL_GPIO_ReadPin(BTN_GPIO_Port,BTN_Pin))
+  if (GPIO_PIN_SET == HAL_GPIO_ReadPin(PBTN_GPIO_Port,PBTN_Pin))
   {
     global_power_status = POWER_ON;
   }
-  else if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(BTN_GPIO_Port,BTN_Pin))
+  else if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PBTN_GPIO_Port,PBTN_Pin))
   {
     global_power_status == POWER_OFF;
   }
@@ -270,6 +276,104 @@ void DMA1_Channel5_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles EXTI line[9:5] interrupts.
+  */
+void EXTI9_5_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI9_5_IRQn 0 */
+
+  /* USER CODE END EXTI9_5_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(TBTN_Pin);
+  /* USER CODE BEGIN EXTI9_5_IRQn 1 */
+
+  if (GPIO_PIN_SET == HAL_GPIO_ReadPin(TBTN_GPIO_Port,TBTN_Pin))
+  {
+    global_timer_status = POWER_ON;
+    global_display_status = DISPLAY_ON;
+  }
+  else if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(TBTN_GPIO_Port,TBTN_Pin))
+  {
+    global_timer_status == POWER_OFF;
+    global_display_status = DISPLAY_OFF;
+  }
+
+  /* USER CODE END EXTI9_5_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM4 global interrupt.
+  */
+void TIM4_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM4_IRQn 0 */
+
+  /* USER CODE END TIM4_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim4);
+  /* USER CODE BEGIN TIM4_IRQn 1 */
+
+  // Flashing count limit.
+  if (cathode_select > 7)
+  {
+    cathode_select = 0;
+  }
+
+  // Timeout count
+  if (DISPLAY_HOUR == global_display_status || DISPLAY_MINUTE == global_display_status)
+  {
+    global_timeout_count ++;
+    display_convert ++;
+    
+    // convert display
+    if (50 == display_convert)
+    {
+      if (DISPLAY_HOUR == global_display_status)
+      {
+        display_convert_hourbuffer[0] = cathode_number[2];
+        display_convert_hourbuffer[1] = cathode_number[3];
+        cathode_number[2] = 0x00;
+        cathode_number[3] = 0x00;
+      }
+      else
+      {
+        display_convert_minutebuffer[0] = cathode_number[0];
+        display_convert_minutebuffer[1] = cathode_number[1];
+        cathode_number[0] = 0x00;
+        cathode_number[1] = 0x00;
+      }
+    }
+    else if (100 == display_convert)
+    {
+      if (DISPLAY_HOUR == global_display_status)
+      {
+        cathode_number[2] = display_convert_hourbuffer[0];
+        cathode_number[3] = display_convert_hourbuffer[1];
+      }
+      else
+      {
+        cathode_number[0] = display_convert_minutebuffer[0];
+        cathode_number[1] = display_convert_minutebuffer[1];
+      }
+      display_convert = 0;
+    }
+
+    // If there is no operation for a long time(5s).
+    if (500 == global_timeout_count)
+    {
+      global_display_status = DISPLAY_ON;   // Stop Flashing
+      global_timeout_count = 0;             // Clear timeout count
+    }
+  }
+  // If the TBTN is closed, then display the time.
+  if (global_display_status != DISPLAY_OFF)
+  {
+    DynamicDisplay(GPIOB,cathode_select,(uint16_t)cathode_number[cathode_select]);
+  }
+  cathode_select++;
+
+  /* USER CODE END TIM4_IRQn 1 */
+}
+
+/**
   * @brief This function handles USART1 global interrupt.
   */
 void USART1_IRQHandler(void)
@@ -279,7 +383,6 @@ void USART1_IRQHandler(void)
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
-
 
   if (__HAL_UART_GET_FLAG(&huart1,UART_FLAG_IDLE) == SET )
   {

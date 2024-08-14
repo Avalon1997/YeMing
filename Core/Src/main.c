@@ -20,6 +20,7 @@
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -47,10 +48,18 @@
 
 /* USER CODE BEGIN PV */
 
-enum_PowerStatusTypeDef global_power_status = POWER_OFF;    // global power output status: On/Off
-enum_DisplayStatusTypeDef global_display_status = DISPLAY_OFF;  // global display clock status: Off/Hour/Minute/All
+enum_PowerStatusTypeDef global_power_status = POWER_OFF;                                // global power output status: Off/On
+enum_PowerStatusTypeDef global_timer_status = POWER_OFF;                                // global timer status : Off/On
+enum_DisplayStatusTypeDef global_display_status = DISPLAY_OFF;                          // global display clock status: Off/Hour/Minute/All
+enum_KeyEventTypeDef global_key_event = KEY_EVENT_NULL;                                 // global key event: Null/Click/Hold
+enum_TimerCountStatusTypeDef global_timer_count_status = TIMER_COUNT_OFF;   // global timeout counter status: Off/On
 
-int key_counter = 0;
+int key_count = 0;
+int global_timeout_count = 0;
+
+int total_count = 0;
+int minute_count = 0;
+int hour_count = 0;
 
 
 /* USER CODE END PV */
@@ -98,6 +107,7 @@ int main(void)
   MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_ADC1_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -110,54 +120,326 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-    /* ----------  Key Scan Code ---------- */
-
-    // If the SW is reset.
-    if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
+    /* ---------- Timer Key Scan Code ---------- */
+    // If TBTN is closed
+    if (POWER_ON == global_timer_status)
     {
-      HAL_Delay(5);
-      if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
+      if (TIMER_COUNT_OFF == global_timer_count_status)
       {
-        // Click Mode Operation: Switch the display(hour/minute).
-        if (DISPLAY_OFF == global_display_status)
+        // If the SW is pressed.
+        if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
         {
-          global_display_status = DISPLAY_MINUTE;
-        }
-        else if (DISPLAY_MINUTE == global_display_status)
-        {
-          global_display_status = DISPLAY_HOUR;
-        }
-
-        // Start the 
-
-
-        while(key_counter != 1900)
-        {
-          if (GPIO_PIN_SET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
+          HAL_Delay(10);
+          if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
           {
-            HAL_Delay(5);
-            if(GPIO_PIN_SET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
+            // Determine the event type: click or hold 
+            while(1)
             {
-              break;
+              if (GPIO_PIN_SET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
+              {
+                HAL_Delay(10);
+                if(GPIO_PIN_SET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
+                {
+                  global_key_event = KEY_EVENT_CLICK;
+                  break;
+                }
+              }
+
+              key_count ++;
+              HAL_Delay(1);
+
+              if(1900 == key_count)
+              {
+                global_key_event = KEY_EVENT_HOLD;
+                break;
+              }
+            }
+            // Click Mode Operation: Switch the display(hour/minute).
+            if (KEY_EVENT_CLICK == global_key_event)
+            {
+              if (DISPLAY_OFF == global_display_status || DISPLAY_HOUR == global_display_status)
+              {
+                global_display_status = DISPLAY_MINUTE;
+                global_timeout_count = 0;
+              }
+              else if (DISPLAY_MINUTE == global_display_status)
+              {
+                global_display_status = DISPLAY_HOUR;
+                global_timeout_count = 0;
+              }
+            }
+            // Hold Mode Operation: Clear the display and count. 
+            else if (KEY_EVENT_HOLD == global_key_event)
+            {
+              // XXXXX Missing code about clearing the display and count. XXXXX 
+              // set no flashing
+              global_display_status == DISPLAY_ON;
+              // Set timer display 00:00
+              cathode_number[0] = display_number[0];  
+              cathode_number[1] = display_number[0];
+              cathode_number[2] = display_number[0];
+              cathode_number[3] = display_number[0];
+              
+              while (1)
+              {
+                if (GPIO_PIN_SET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
+                {
+                  HAL_Delay(10);
+                  if(GPIO_PIN_SET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
+                  {
+                    break;
+                  }
+                }
+              }
+            }
+            // Clear all key flags. 
+            key_count = 0;
+            global_key_event = KEY_EVENT_NULL;
+          }
+        }
+        // If the display is flashing, then we can operate the add and reduce key. 
+        if (global_display_status == DISPLAY_HOUR || global_display_status == DISPLAY_MINUTE)
+        {
+          // If the ADD is pressed.
+          if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ADD_GPIO_Port,ADD_Pin))
+          {
+            HAL_Delay(10);
+            if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ADD_GPIO_Port,ADD_Pin))
+            {
+              // Determine the event type: click or hold 
+              while (1)
+              {
+                if (GPIO_PIN_SET == HAL_GPIO_ReadPin(ADD_GPIO_Port,ADD_Pin))
+                {
+                  HAL_Delay(10);
+                  if (GPIO_PIN_SET == HAL_GPIO_ReadPin(ADD_GPIO_Port,ADD_Pin))
+                  {
+                    global_key_event == KEY_EVENT_CLICK;
+                    break;
+                  }
+                }
+
+                key_count++;
+                HAL_Delay(1);
+
+                if (1900 == key_count)
+                {
+                  global_key_event = KEY_EVENT_HOLD;
+                  break;
+                }
+              }
+              // Click Mode Operation: Increase count and display. 
+              if (KEY_EVENT_CLICK == global_key_event)
+              {
+                if (DISPLAY_MINUTE == global_display_status)
+                {
+                  if (59 == minute_count)
+                  {
+                    minute_count = 0;
+                  }
+                  else
+                  {
+                    minute_count ++;
+                  }
+                }
+                else if (DISPLAY_HOUR == global_display_status)
+                {
+                  if (24 == hour_count)
+                  {
+                    hour_count = 0;
+                  }
+                  else
+                  {
+                    hour_count ++;
+                  }
+                }
+              }
+              // Hold Mode Operation: Keep increasing count and display. 
+              else if (KEY_EVENT_HOLD == global_key_event)
+              {
+                key_count = 0;
+                while (1)
+                {
+                  if (GPIO_PIN_SET == HAL_GPIO_ReadPin(ADD_GPIO_Port,ADD_Pin))
+                  {
+                    HAL_Delay(10);
+                    if (GPIO_PIN_SET == HAL_GPIO_ReadPin(ADD_GPIO_Port,ADD_Pin))
+                    { //Hold end
+                      break;
+                    }
+                  }
+                  HAL_Delay(50);
+                  if (10 == key_count)
+                  {
+                    if (DISPLAY_MINUTE == global_display_status)
+                    {
+                      if (59 == minute_count)
+                      {
+                        minute_count = 0;
+                      }
+                      else
+                      {
+                        minute_count ++;
+                      }
+                    }
+                    else if (DISPLAY_HOUR == global_display_status)
+                    {
+                      if (24 == hour_count)
+                      {
+                        hour_count = 0;
+                      }
+                      else
+                      {
+                        hour_count ++;
+                      }
+                    }
+                    key_count = 0;
+                  }
+                  key_count ++;
+                } 
+              }
+              // Clear key flags. 
+              key_count = 0;
+              global_key_event = KEY_EVENT_NULL;
             }
           }
-
-          // 1ms 计时，如果时间超过大约 2s 后将清除当前计时
-          HAL_Delay(1);
-          key_counter ++;
-          if(1900 == key_counter)
+          // If the REDUCE is pressed. 
+          if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(REDUCE_GPIO_Port,REDUCE_Pin))
           {
-            // 分钟小时位计数、显示全部置零
-            break;
+            HAL_Delay(10);
+            if (GPIO_PIN_SET == HAL_GPIO_ReadPin(REDUCE_GPIO_Port,REDUCE_Pin))
+            {
+              // Determine the event type: click or hold 
+              while (1)
+              {
+                if (GPIO_PIN_SET == HAL_GPIO_ReadPin(REDUCE_GPIO_Port,REDUCE_Pin))
+                {
+                  HAL_Delay(10);
+                  if (GPIO_PIN_SET == HAL_GPIO_ReadPin(REDUCE_GPIO_Port,REDUCE_Pin))
+                  {
+                    global_key_event == KEY_EVENT_CLICK;
+                    break;
+                  }
+                }
+
+                key_count++;
+                HAL_Delay(1);
+
+                if (1900 == key_count)
+                {
+                  global_key_event = KEY_EVENT_HOLD;
+                  break;
+                }
+              }
+              // Click Mode Operation: Decrease count and display. 
+              if (KEY_EVENT_CLICK == global_key_event)
+              {
+                if (DISPLAY_MINUTE == global_display_status)
+                {
+                  if (0 == minute_count)
+                  {
+                    minute_count = 59;
+                  }
+                  else
+                  {
+                    minute_count --;
+                  }
+                }
+                else if (DISPLAY_HOUR == global_display_status)
+                {
+                  if (0 == hour_count)
+                  {
+                    hour_count = 24;
+                  }
+                  else
+                  {
+                    hour_count --;
+                  }
+                }
+              }
+              // Hold Mode Operation: Keep decreasing count and display. 
+              else if (KEY_EVENT_HOLD == global_key_event)
+              {
+                key_count = 0;
+                while (1)
+                {
+                  if (GPIO_PIN_SET == HAL_GPIO_ReadPin(REDUCE_GPIO_Port,REDUCE_Pin))
+                  {
+                    HAL_Delay(10);
+                    if (GPIO_PIN_SET == HAL_GPIO_ReadPin(REDUCE_GPIO_Port,REDUCE_Pin))
+                    {
+                      // Hold end
+                      break;
+                    }
+                  }
+                  HAL_Delay(50);
+                  if (20 == key_count)
+                  {
+                    if (DISPLAY_MINUTE == global_display_status)
+                    {
+                      if (0 == minute_count)
+                      {
+                        minute_count = 59;
+                      }
+                      else
+                      {
+                        minute_count --;
+                      }
+                    }
+                    else if (DISPLAY_HOUR == global_display_status)
+                    {
+                      if (0 == hour_count)
+                      {
+                        hour_count = 24;
+                      }
+                      else
+                      {
+                        hour_count --;
+                      }
+                    }
+                  }
+                  key_count ++;
+                }
+              }
+              // Clear key flags. 
+              key_count = 0;
+              global_key_event = KEY_EVENT_NULL;
+            }
           }
         }
-
-
       }
+        // If the ST is pressed. 
+        if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ST_GPIO_Port,ST_Pin))
+      {
+        HAL_Delay(10);
+        if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ST_GPIO_Port,ST_Pin))
+        { // ST only has the click mode. 
+          while (1)
+          {
+            if (GPIO_PIN_SET == HAL_GPIO_ReadPin(ST_GPIO_Port,ST_Pin))
+            {
+              HAL_Delay(10);
+              if (GPIO_PIN_SET == HAL_GPIO_ReadPin(ST_GPIO_Port,ST_Pin))
+              {
+                break;
+              }
+            }
+          }
+          // XXXXX Missing code about starting the count or stoping the count.    
+          if (TIMER_COUNT_OFF == global_timer_count_status)
+          {
+            global_timer_count_status = TIMER_COUNT_ON;
+          }
+          else if (TIMER_COUNT_ON == global_timer_count_status)   
+          {
+            global_timer_count_status = TIMER_COUNT_OFF;
+          }
+        }
+      }
+
     }
 
-
-
+    
   }
   /* USER CODE END 3 */
 }
@@ -248,16 +530,18 @@ void Determining_Power_Output_Status(void)
 
 void STM32_Init(void)
 {
-  // Start the USART1 DMA tranmit
+  // Start the USART1 DMA tranmit.
   HAL_UART_Transmit_DMA(&huart1,rx1_buffer,RX1BUFFERSIZE);
+
+  // Start the timer4 to display LED.
+  HAL_TIM_Base_Start_IT(&htim4);
 
 
 }
 
 void LED_Display_Init(void)
 {
-
-
+  memset(cathode_number,0x3F,sizeof(cathode_number));
 }
 
 

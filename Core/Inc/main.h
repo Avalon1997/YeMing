@@ -65,9 +65,9 @@ void Determining_Power_Output_Status(void);
 /* Private defines -----------------------------------------------------------*/
 #define P_IN_Pin GPIO_PIN_0
 #define P_IN_GPIO_Port GPIOA
-#define BTN_Pin GPIO_PIN_1
-#define BTN_GPIO_Port GPIOA
-#define BTN_EXTI_IRQn EXTI1_IRQn
+#define PBTN_Pin GPIO_PIN_1
+#define PBTN_GPIO_Port GPIOA
+#define PBTN_EXTI_IRQn EXTI1_IRQn
 #define SW_Pin GPIO_PIN_2
 #define SW_GPIO_Port GPIOA
 #define ADD_Pin GPIO_PIN_3
@@ -76,6 +76,9 @@ void Determining_Power_Output_Status(void);
 #define REDUCE_GPIO_Port GPIOA
 #define ST_Pin GPIO_PIN_5
 #define ST_GPIO_Port GPIOA
+#define TBTN_Pin GPIO_PIN_6
+#define TBTN_GPIO_Port GPIOA
+#define TBTN_EXTI_IRQn EXTI9_5_IRQn
 #define a_Pin GPIO_PIN_0
 #define a_GPIO_Port GPIOB
 #define b_Pin GPIO_PIN_1
@@ -108,17 +111,38 @@ typedef enum
 } enum_PowerStatusTypeDef;
 
 extern enum_PowerStatusTypeDef global_power_status;
+extern enum_PowerStatusTypeDef global_timer_status;
 
 typedef enum
 {
   DISPLAY_OFF     = 0x00U,
-  DISPLAY_HOUR    = 0x01U,
-  DISPLAY_MINUTE  = 0x02U,
-  DISPLAY_SECOND  = 0x03U,
-  DISPLAY_ALL     = 0x04U
+  DISPLAY_ON      = 0x01U,
+  DISPLAY_HOUR    = 0x02U,
+  DISPLAY_MINUTE  = 0x03U,
+  DISPLAY_SECOND  = 0x04U,
+  DISPLAY_ALL     = 0x05U
 } enum_DisplayStatusTypeDef;
 
 extern enum_DisplayStatusTypeDef global_display_status;
+
+typedef enum
+{
+  KEY_EVENT_NULL    = 0x00U,
+  KEY_EVENT_CLICK   = 0x01U,
+  KEY_EVENT_HOLD    = 0x02U
+} enum_KeyEventTypeDef;
+
+extern enum_KeyEventTypeDef global_key_event;
+
+typedef enum
+{
+  TIMER_COUNT_OFF = 0x00U,
+  TIMER_COUNT_ON  = 0x01U
+} enum_TimerCountStatusTypeDef;
+
+extern enum_TimerCountStatusTypeDef global_timer_count_status;
+
+extern int global_timeout_count;
 
 /* USER CODE END Private defines */
 
