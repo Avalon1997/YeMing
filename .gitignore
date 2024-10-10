@@ -1,3 +1,6 @@
 MDK-ARM/.vscode/
 MDK-ARM/YeMing/
 MDK-ARM/*.Charles*
+MDK-ARM/DebugConfig/
+MDK-ARM/startup_stm32f103xb.lst
+MDK-ARM/RTE/

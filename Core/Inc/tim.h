@@ -1,9 +1,9 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    usart.h
+  * @file    tim.h
   * @brief   This file contains all the function prototypes for
-  *          the usart.c file
+  *          the tim.c file
   ******************************************************************************
   * @attention
   *
@@ -18,8 +18,8 @@
   */
 /* USER CODE END Header */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __USART_H__
-#define __USART_H__
+#ifndef __TIM_H__
+#define __TIM_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,21 +32,24 @@ extern "C" {
 
 /* USER CODE END Includes */
 
-extern UART_HandleTypeDef huart1;
+extern TIM_HandleTypeDef htim3;
+
+extern TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN Private defines */
 
-#define RX1BUFFERSIZE 256
-
-extern uint8_t rx1_buffer[RX1BUFFERSIZE];
-extern uint16_t rx1_len;
-extern uint8_t data_cache1[RX1BUFFERSIZE];
+extern uint8_t display_number[10];
+extern uint8_t cathode_number[8];
+extern uint8_t cathode_select;
 
 /* USER CODE END Private defines */
 
-void MX_USART1_UART_Init(void);
+void MX_TIM3_Init(void);
+void MX_TIM4_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+
+void DynamicDisplay (GPIO_TypeDef *GPIOx, uint8_t i, uint16_t number, uint16_t second_convert);
 
 /* USER CODE END Prototypes */
 
@@ -54,5 +57,5 @@ void MX_USART1_UART_Init(void);
 }
 #endif
 
-#endif /* __USART_H__ */
+#endif /* __TIM_H__ */
 
