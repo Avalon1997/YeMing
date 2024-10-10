@@ -32,29 +32,24 @@ extern "C" {
 
 /* USER CODE END Includes */
 
+extern TIM_HandleTypeDef htim3;
+
 extern TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN Private defines */
 
-uint8_t display_number[10] = 
-{
-  0x3F, 0x06, 0x5B, 0x4F, 0x66,       //  0, 1, 2, 3, 4
-  0x6D, 0x7D, 0x07, 0x7F, 0x7F        //  5, 6, 7, 8, 9
-};
-uint8_t cathode_number[8] = 
-{
-  0x00, 0x00, 0x00, 0x00,       //  -, -, -, -
-  0x00, 0x00, 0x00, 0x00        //  -, -, -, -
-};
-uint8_t cathode_select = 0;
+extern uint8_t display_number[10];
+extern uint8_t cathode_number[8];
+extern uint8_t cathode_select;
 
 /* USER CODE END Private defines */
 
+void MX_TIM3_Init(void);
 void MX_TIM4_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
-void DynamicDisplay (GPIO_TypeDef *GPIOx, uint8_t i, uint16_t number);
+void DynamicDisplay (GPIO_TypeDef *GPIOx, uint8_t i, uint16_t number, uint16_t second_convert);
 
 /* USER CODE END Prototypes */
 

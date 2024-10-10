@@ -47,6 +47,8 @@
 /* USER CODE BEGIN PV */
 
 static int display_convert;
+static uint8_t second_convert_mask = 0x00U;
+static uint16_t second_number = 0x0000U;
 static uint8_t display_convert_hourbuffer[2] = {0x00, 0x00};
 static uint8_t display_convert_minutebuffer[2] = {0x00, 0x00};
 
@@ -64,6 +66,7 @@ static uint8_t display_convert_minutebuffer[2] = {0x00, 0x00};
 
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc1;
+extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 extern DMA_HandleTypeDef hdma_usart1_rx;
@@ -301,6 +304,42 @@ void EXTI9_5_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles TIM3 global interrupt.
+  */
+void TIM3_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM3_IRQn 0 */
+
+  /* USER CODE END TIM3_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim3);
+  /* USER CODE BEGIN TIM3_IRQn 1 */
+  if (0 == second_count)
+  {
+    if (minute_count > 0)
+    {
+      minute_count --;
+      second_count = 60;
+    }
+    else if (0 == minute_count)
+    {
+      if (hour_count > 0)
+      {
+        hour_count --;
+        minute_count = 59;
+        second_count = 60;
+      }
+      else if (0 == hour_count)
+      {
+        // Counter end, cut off power output, clear display, reset counter.
+      }
+    }
+  }
+  second_count --;
+
+  /* USER CODE END TIM3_IRQn 1 */
+}
+
+/**
   * @brief This function handles TIM4 global interrupt.
   */
 void TIM4_IRQHandler(void)
@@ -312,7 +351,7 @@ void TIM4_IRQHandler(void)
   /* USER CODE BEGIN TIM4_IRQn 1 */
 
   // Flashing count limit.
-  if (cathode_select > 7)
+  if (8 == cathode_select)
   {
     cathode_select = 0;
   }
@@ -364,14 +403,25 @@ void TIM4_IRQHandler(void)
     }
   }
   // If the TBTN is closed, then display the time.
-  if (global_display_status != DISPLAY_OFF)
+  if (global_display_status != DISPLAY_OFF && global_timer_count_status == TIMER_COUNT_OFF)
   {
-    DynamicDisplay(GPIOB,cathode_select,(uint16_t)cathode_number[cathode_select]);
+    DynamicDisplay(GPIOB, cathode_select, (uint16_t)cathode_number[cathode_select], second_number);
+  }
+  else if(global_display_status != DISPLAY_OFF && global_timer_count_status == TIMER_COUNT_ON)
+  {
+    global_second_dot_count++;
+    if (50 == global_second_dot_count)
+    {
+      second_convert_mask = ~second_convert_mask;
+      second_number = second_number | (second_convert_mask << 7);
+    }
+    DynamicDisplay(GPIOB, cathode_select, (uint16_t)cathode_number[cathode_select], second_number);
   }
   cathode_select++;
 
   /* USER CODE END TIM4_IRQn 1 */
 }
+
 
 /**
   * @brief This function handles USART1 global interrupt.

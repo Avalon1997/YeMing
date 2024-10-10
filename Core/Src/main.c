@@ -6,6 +6,18 @@
   ******************************************************************************
   * @attention
   *
+  * ------------------------------------------------------------------
+  *
+  *                        ____  _   _ _   _ 
+  *                       |  _ \| | | | \ | |
+  *                       | |_) | | | |  \| |
+  *                       |  _ <| |_| | |\  |
+  *                       |_| \_\\___/|_| \_|
+  *
+  *
+  *                                                      CharlesYu
+  * ------------------------------------------------------------------
+  * 
   * Copyright (c) 2024 STMicroelectronics.
   * All rights reserved.
   *
@@ -52,14 +64,16 @@ enum_PowerStatusTypeDef global_power_status = POWER_OFF;                        
 enum_PowerStatusTypeDef global_timer_status = POWER_OFF;                                // global timer status : Off/On
 enum_DisplayStatusTypeDef global_display_status = DISPLAY_OFF;                          // global display clock status: Off/Hour/Minute/All
 enum_KeyEventTypeDef global_key_event = KEY_EVENT_NULL;                                 // global key event: Null/Click/Hold
-enum_TimerCountStatusTypeDef global_timer_count_status = TIMER_COUNT_OFF;   // global timeout counter status: Off/On
+enum_TimerCountStatusTypeDef global_timer_count_status = TIMER_COUNT_OFF;               // global timeout counter status: Off/On
 
-int key_count = 0;
-int global_timeout_count = 0;
+int key_count = 0;                          // Time count of button press          
+int global_timeout_count = 0;               // Count and flash hour or minute display.
+int global_second_dot_count = 0;            // Count and flash second dot display.
 
-int total_count = 0;
-int minute_count = 0;
-int hour_count = 0;
+/* ---------- Total time count */
+uint8_t minute_count = 0;                   // These three variable are about the time count.
+uint8_t hour_count = 0;                     // The total time count is 
+uint8_t second_count = 0;                   // (minute_count*60 + hour_count*3600 + second_count), in seconds .
 
 
 /* USER CODE END PV */
@@ -108,6 +122,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_ADC1_Init();
   MX_TIM4_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -148,7 +163,7 @@ int main(void)
               key_count ++;
               HAL_Delay(1);
 
-              if(1900 == key_count)
+              if(MAXIMUM_KEY_COUNT == key_count)
               {
                 global_key_event = KEY_EVENT_HOLD;
                 break;
@@ -171,14 +186,16 @@ int main(void)
             // Hold Mode Operation: Clear the display and count. 
             else if (KEY_EVENT_HOLD == global_key_event)
             {
-              // XXXXX Missing code about clearing the display and count. XXXXX 
-              // set no flashing
+              // set no flashing.
               global_display_status == DISPLAY_ON;
-              // Set timer display 00:00
+              // Set timer display 00:00 .
               cathode_number[0] = display_number[0];  
               cathode_number[1] = display_number[0];
               cathode_number[2] = display_number[0];
               cathode_number[3] = display_number[0];
+              // Set count to 0 .
+              minute_count = 0;
+              hour_count = 0;
               
               while (1)
               {
@@ -222,7 +239,7 @@ int main(void)
                 key_count++;
                 HAL_Delay(1);
 
-                if (1900 == key_count)
+                if (MAXIMUM_KEY_COUNT == key_count)
                 {
                   global_key_event = KEY_EVENT_HOLD;
                   break;
@@ -241,6 +258,8 @@ int main(void)
                   {
                     minute_count ++;
                   }
+                  cathode_number[0] = display_number[(uint8_t)((int)minute_count % (int)10)];
+                  cathode_number[1] = display_number[(uint8_t)((int)minute_count / (int)10)];
                 }
                 else if (DISPLAY_HOUR == global_display_status)
                 {
@@ -252,6 +271,8 @@ int main(void)
                   {
                     hour_count ++;
                   }
+                  cathode_number[2] = display_number[(uint8_t)((int)hour_count % (int)10)];
+                  cathode_number[3] = display_number[(uint8_t)((int)hour_count / (int)10)];
                 }
               }
               // Hold Mode Operation: Keep increasing count and display. 
@@ -281,6 +302,8 @@ int main(void)
                       {
                         minute_count ++;
                       }
+                      cathode_number[0] = display_number[(uint8_t)((int)minute_count % (int)10)];
+                      cathode_number[1] = display_number[(uint8_t)((int)minute_count / (int)10)];
                     }
                     else if (DISPLAY_HOUR == global_display_status)
                     {
@@ -292,6 +315,8 @@ int main(void)
                       {
                         hour_count ++;
                       }
+                      cathode_number[2] = display_number[(uint8_t)((int)hour_count % (int)10)];
+                      cathode_number[3] = display_number[(uint8_t)((int)hour_count / (int)10)];
                     }
                     key_count = 0;
                   }
@@ -325,7 +350,7 @@ int main(void)
                 key_count++;
                 HAL_Delay(1);
 
-                if (1900 == key_count)
+                if (MAXIMUM_KEY_COUNT == key_count)
                 {
                   global_key_event = KEY_EVENT_HOLD;
                   break;
@@ -344,6 +369,8 @@ int main(void)
                   {
                     minute_count --;
                   }
+                  cathode_number[0] = display_number[(uint8_t)((int)minute_count % (int)10)];
+                  cathode_number[1] = display_number[(uint8_t)((int)minute_count / (int)10)];
                 }
                 else if (DISPLAY_HOUR == global_display_status)
                 {
@@ -355,6 +382,8 @@ int main(void)
                   {
                     hour_count --;
                   }
+                  cathode_number[2] = display_number[(uint8_t)((int)hour_count % (int)10)];
+                  cathode_number[3] = display_number[(uint8_t)((int)hour_count / (int)10)];
                 }
               }
               // Hold Mode Operation: Keep decreasing count and display. 
@@ -385,6 +414,8 @@ int main(void)
                       {
                         minute_count --;
                       }
+                      cathode_number[0] = display_number[(uint8_t)((int)minute_count % (int)10)];
+                      cathode_number[1] = display_number[(uint8_t)((int)minute_count / (int)10)];
                     }
                     else if (DISPLAY_HOUR == global_display_status)
                     {
@@ -396,6 +427,8 @@ int main(void)
                       {
                         hour_count --;
                       }
+                      cathode_number[2] = display_number[(uint8_t)((int)hour_count % (int)10)];
+                      cathode_number[3] = display_number[(uint8_t)((int)hour_count / (int)10)];
                     }
                   }
                   key_count ++;
@@ -425,18 +458,29 @@ int main(void)
               }
             }
           }
-          // XXXXX Missing code about starting the count or stoping the count.    
+
           if (TIMER_COUNT_OFF == global_timer_count_status)
           {
-            global_timer_count_status = TIMER_COUNT_ON;
+            // Firstly, check whether the count is equal to 0. 
+            if (0 == minute_count && 0 == hour_count)
+            {
+              // XXXXX Make the "No count" noise. XXXXX 
+
+              // And do nothing.
+            }
+            else 
+            {
+              global_timer_count_status = TIMER_COUNT_ON;
+              HAL_TIM_Base_Start_IT(&htim3);  // Run the timer.
+            }
           }
           else if (TIMER_COUNT_ON == global_timer_count_status)   
           {
             global_timer_count_status = TIMER_COUNT_OFF;
+            HAL_TIM_Base_Stop_IT(&htim3);   // Stop the timer.
           }
         }
       }
-
     }
 
     
@@ -543,8 +587,6 @@ void LED_Display_Init(void)
 {
   memset(cathode_number,0x3F,sizeof(cathode_number));
 }
-
-
 
 /* USER CODE END 4 */
 

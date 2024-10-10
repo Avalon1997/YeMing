@@ -104,7 +104,9 @@ void Determining_Power_Output_Status(void);
 
 /* USER CODE BEGIN Private defines */
 
-typedef enum
+#define MAXIMUM_KEY_COUNT 1900  // The max count time of key press.
+
+typedef enum  /* ---------- main switch status */
 {
   POWER_OFF = 0x00U,
   POWER_ON  = 0x01U
@@ -113,19 +115,19 @@ typedef enum
 extern enum_PowerStatusTypeDef global_power_status;
 extern enum_PowerStatusTypeDef global_timer_status;
 
-typedef enum
+typedef enum  /* ---------- display status */
 {
-  DISPLAY_OFF     = 0x00U,
-  DISPLAY_ON      = 0x01U,
-  DISPLAY_HOUR    = 0x02U,
-  DISPLAY_MINUTE  = 0x03U,
-  DISPLAY_SECOND  = 0x04U,
-  DISPLAY_ALL     = 0x05U
+  DISPLAY_OFF     = 0x00U,      // Display nothing
+  DISPLAY_ON      = 0x01U,      // Display turns on
+  DISPLAY_HOUR    = 0x02U,      // The hour will flash
+  DISPLAY_MINUTE  = 0x03U,      // The minute will flash
+  DISPLAY_SECOND  = 0x04U,      // The second will flash
+  DISPLAY_ALL     = 0x05U       // 
 } enum_DisplayStatusTypeDef;
 
 extern enum_DisplayStatusTypeDef global_display_status;
 
-typedef enum
+typedef enum  /* ---------- key event */
 {
   KEY_EVENT_NULL    = 0x00U,
   KEY_EVENT_CLICK   = 0x01U,
@@ -134,7 +136,7 @@ typedef enum
 
 extern enum_KeyEventTypeDef global_key_event;
 
-typedef enum
+typedef enum  /* ---------- timer count status */
 {
   TIMER_COUNT_OFF = 0x00U,
   TIMER_COUNT_ON  = 0x01U
@@ -143,6 +145,10 @@ typedef enum
 extern enum_TimerCountStatusTypeDef global_timer_count_status;
 
 extern int global_timeout_count;
+extern int global_second_dot_count;
+extern uint8_t minute_count;
+extern uint8_t hour_count;
+extern uint8_t second_count;
 
 /* USER CODE END Private defines */
 
