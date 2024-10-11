@@ -69,12 +69,15 @@ enum_TimerCountStatusTypeDef global_timer_count_status = TIMER_COUNT_OFF;       
 int key_count = 0;                          // Time count of button press          
 int global_timeout_count = 0;               // Count and flash hour or minute display.
 int global_second_dot_count = 0;            // Count and flash second dot display.
+int i;                                      // Loop variable
 
 /* ---------- Total time count */
 uint8_t minute_count = 0;                   // These three variable are about the time count.
 uint8_t hour_count = 0;                     // The total time count is 
 uint8_t second_count = 0;                   // (minute_count*60 + hour_count*3600 + second_count), in seconds .
 
+uint16_t adc_raw_value[10] = {0};           // ADC raw value array
+uint16_t adc_value = 0;                     // ADC value in average calculation
 
 /* USER CODE END PV */
 
@@ -135,15 +138,13 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-    /* ---------- Timer Key Scan Code ---------- */
-    // If TBTN is closed
+    /* ---------- Timer control key scan code */
     if (POWER_ON == global_timer_status)
-    {
+    { // If TBTN is closed
       if (TIMER_COUNT_OFF == global_timer_count_status)
       {
-        // If the SW is pressed.
         if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
-        {
+        { // If the SW is pressed.
           HAL_Delay(10);
           if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
           {
@@ -217,9 +218,8 @@ int main(void)
         // If the display is flashing, then we can operate the add and reduce key. 
         if (global_display_status == DISPLAY_HOUR || global_display_status == DISPLAY_MINUTE)
         {
-          // If the ADD is pressed.
           if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ADD_GPIO_Port,ADD_Pin))
-          {
+          { // If the ADD is pressed.
             HAL_Delay(10);
             if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ADD_GPIO_Port,ADD_Pin))
             {
@@ -328,9 +328,8 @@ int main(void)
               global_key_event = KEY_EVENT_NULL;
             }
           }
-          // If the REDUCE is pressed. 
           if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(REDUCE_GPIO_Port,REDUCE_Pin))
-          {
+          { // If the REDUCE is pressed. 
             HAL_Delay(10);
             if (GPIO_PIN_SET == HAL_GPIO_ReadPin(REDUCE_GPIO_Port,REDUCE_Pin))
             {
@@ -441,9 +440,8 @@ int main(void)
           }
         }
       }
-        // If the ST is pressed. 
-        if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ST_GPIO_Port,ST_Pin))
-      {
+      if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ST_GPIO_Port,ST_Pin))
+      { // If the ST is pressed. 
         HAL_Delay(10);
         if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ST_GPIO_Port,ST_Pin))
         { // ST only has the click mode. 
@@ -483,6 +481,25 @@ int main(void)
       }
     }
 
+    /* ---------- Power control key scan code */
+    if (POWER_ON == global_power_status)
+    {
+      /*XXXXX get the adc raw value and calculate the percentage, then increse or reduce the output to the corresponding percentage. XXXXX*/
+
+      /* ---------- Get the adc value */
+      for ( i = 0; i < 10; i++)
+      {
+        adc_value = adc_value + adc_raw_value[i];
+      }
+      adc_value = adc_value / 10;
+
+      /* ---------- Calculate the percentage of output power */
+
+
+      /* ---------- Take the operation to increse or reduce the output */
+      
+
+    }
     
   }
   /* USER CODE END 3 */
@@ -571,7 +588,13 @@ void Determining_Power_Output_Status(void)
 
   }
 }
-
+/**
+* @name       STM32_Init
+* @brief      Initialization of STM32 Hardware.
+* @param      NONE
+* @return     NONE
+*
+*/
 void STM32_Init(void)
 {
   // Start the USART1 DMA tranmit.
@@ -580,12 +603,23 @@ void STM32_Init(void)
   // Start the timer4 to display LED.
   HAL_TIM_Base_Start_IT(&htim4);
 
+  // Take a calibration for the ADC collection. 
+  HAL_ADCEx_Calibration_Start(&hadc1);
 
-}
-
+}  
+/**
+* @name       LED_Display_Init
+* @brief      Initialization of time display.
+* @param      NONE
+* @return     NONE
+*
+*/
 void LED_Display_Init(void)
 {
   memset(cathode_number,0x3F,sizeof(cathode_number));
+  hour_count = 0;
+  minute_count = 0;
+  second_count = 0;
 }
 
 /* USER CODE END 4 */

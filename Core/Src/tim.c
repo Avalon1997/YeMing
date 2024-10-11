@@ -194,10 +194,18 @@ void DynamicDisplay (GPIO_TypeDef *GPIOx, uint8_t i, uint16_t number, uint16_t s
 {
   static uint16_t sn = 0;
   static uint32_t bsrr = 0;
-  sn = (((i / 4) %2) <<2) | (((i / 2) % 2) << 1) | (i % 2);
-  bsrr = (sn << 8) | (number | second_convert);
-
-  GPIOx->BSRR = ((~bsrr) << 16) | bsrr ;
+  if (i < 5)
+  {
+    sn = (((i / 4) % 2) << 2) | (((i / 2) % 2) << 1) | (i % 2);
+    bsrr = (sn << 8) | (number | second_convert);
+    GPIOx->BSRR = ((~bsrr) << 16) | bsrr;
+  }
+  else
+  {
+    sn = (((i / 4) % 2) << 2) | (((i / 2) % 2) << 1) | (i % 2);
+    bsrr = (sn << 8) | number;
+    GPIOx->BSRR = ((~bsrr) << 16) | bsrr;
+  }
 }
 
 /* USER CODE END 1 */

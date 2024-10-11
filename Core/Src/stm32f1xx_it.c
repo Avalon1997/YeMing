@@ -25,6 +25,7 @@
 
 #include "usart.h"
 #include "tim.h"
+#include "adc.h"
 
 /* USER CODE END Includes */
 
@@ -227,10 +228,13 @@ void EXTI1_IRQHandler(void)
   if (GPIO_PIN_SET == HAL_GPIO_ReadPin(PBTN_GPIO_Port,PBTN_Pin))
   {
     global_power_status = POWER_ON;
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&adc_raw_value, 10);
   }
   else if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PBTN_GPIO_Port,PBTN_Pin))
   {
     global_power_status == POWER_OFF;
+    HAL_ADC_Stop_DMA(&hadc1);
+    /*XXXXX Turns off the power output XXXXX*/
   }
 
   /* USER CODE END EXTI1_IRQn 1 */
@@ -421,7 +425,6 @@ void TIM4_IRQHandler(void)
 
   /* USER CODE END TIM4_IRQn 1 */
 }
-
 
 /**
   * @brief This function handles USART1 global interrupt.

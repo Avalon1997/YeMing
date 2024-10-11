@@ -59,6 +59,9 @@ void Error_Handler(void);
 /* USER CODE BEGIN EFP */
 
 void Determining_Power_Output_Status(void);
+int fputc(int ch,FILE *f);
+void STM32_Init(void);
+void LED_Display_Init(void);
 
 /* USER CODE END EFP */
 
@@ -104,7 +107,8 @@ void Determining_Power_Output_Status(void);
 
 /* USER CODE BEGIN Private defines */
 
-#define MAXIMUM_KEY_COUNT 1900  // The max count time of key press.
+#define MAXIMUM_KEY_COUNT       (uint16_t)1900  // The max count time of key press.
+#define MAXIMUM_POWER_OUTPUT    (uint16_t)4096  // The max value of power output.
 
 typedef enum  /* ---------- main switch status */
 {
@@ -149,6 +153,7 @@ extern int global_second_dot_count;
 extern uint8_t minute_count;
 extern uint8_t hour_count;
 extern uint8_t second_count;
+extern uint16_t adc_raw_value[10];
 
 /* USER CODE END Private defines */
 

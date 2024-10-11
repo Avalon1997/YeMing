@@ -3,6 +3,22 @@
 
 This md file is only used for recording the development process and thinking of YeMing product, more details will be seen on my blog wiki column : [YeMing - Multifunctionaltimer](https://www.charlesyu1997.com/wiki/MultiTimer/index.html)
 
+# General description
+
+In this section, I only provide brief description of hardware and features about the product YeMing
+
+## Hardware
+
+There are five module making up the entire hardware, power & timer operation module, output & isolation module, audio prompt module, display module and control unit.
+
+## Features
+
+- Stepless adjustable pwoer output (0~100%).
+- Time setable with key button.
+- Audio prompt.
+- Independent timing and power control.
+- Real time display.
+
 # Development process records
 
 In order to read and understand the finished code more quickly during the intermittent development, some definitions, enums, variables and functions are written down here.
