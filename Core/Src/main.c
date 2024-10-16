@@ -78,6 +78,7 @@ uint8_t second_count = 0;                   // (minute_count*60 + hour_count*360
 
 uint16_t adc_raw_value[10] = {0};           // ADC raw value array
 uint16_t adc_value = 0;                     // ADC value in average calculation
+uint8_t power_percentage = 0;                   // The percentage of power output
 
 /* USER CODE END PV */
 
@@ -126,6 +127,7 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM4_Init();
   MX_TIM3_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -188,7 +190,7 @@ int main(void)
             else if (KEY_EVENT_HOLD == global_key_event)
             {
               // set no flashing.
-              global_display_status == DISPLAY_ON;
+              global_display_status = DISPLAY_ON;
               // Set timer display 00:00 .
               cathode_number[0] = display_number[0];  
               cathode_number[1] = display_number[0];
@@ -231,7 +233,7 @@ int main(void)
                   HAL_Delay(10);
                   if (GPIO_PIN_SET == HAL_GPIO_ReadPin(ADD_GPIO_Port,ADD_Pin))
                   {
-                    global_key_event == KEY_EVENT_CLICK;
+                    global_key_event = KEY_EVENT_CLICK;
                     break;
                   }
                 }
@@ -341,7 +343,7 @@ int main(void)
                   HAL_Delay(10);
                   if (GPIO_PIN_SET == HAL_GPIO_ReadPin(REDUCE_GPIO_Port,REDUCE_Pin))
                   {
-                    global_key_event == KEY_EVENT_CLICK;
+                    global_key_event = KEY_EVENT_CLICK;
                     break;
                   }
                 }
@@ -481,22 +483,12 @@ int main(void)
       }
     }
 
+    void CY_collect_ADC_and_convert(void);
+
     /* ---------- Power control key scan code */
     if (POWER_ON == global_power_status)
     {
-      /*XXXXX get the adc raw value and calculate the percentage, then increse or reduce the output to the corresponding percentage. XXXXX*/
-
-      /* ---------- Get the adc value */
-      for ( i = 0; i < 10; i++)
-      {
-        adc_value = adc_value + adc_raw_value[i];
-      }
-      adc_value = adc_value / 10;
-
-      /* ---------- Calculate the percentage of output power */
-
-
-      /* ---------- Take the operation to increse or reduce the output */
+      /*XXXXX Calculate the power counter time according voltage percentage and reconfigure tim1 ARR. XXXXX*/
       
 
     }
@@ -603,8 +595,9 @@ void STM32_Init(void)
   // Start the timer4 to display LED.
   HAL_TIM_Base_Start_IT(&htim4);
 
-  // Take a calibration for the ADC collection. 
+  // Take a calibration for the ADC collection, then start to convert the voltage to digital quantity.
   HAL_ADCEx_Calibration_Start(&hadc1);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&adc_raw_value, 10);
 
 }  
 /**
@@ -620,6 +613,49 @@ void LED_Display_Init(void)
   hour_count = 0;
   minute_count = 0;
   second_count = 0;
+}
+
+/**
+* @name       CY_Average_u16
+* @brief      Get the average of an array.
+* @param      uint16_t array[], target array.
+* @param      int amount, the amount of the target array.
+* @return     uint16_t Average value
+*
+*/
+uint16_t CY_Average_u16(uint16_t array[], int amount)
+{
+  uint16_t avg = 0;
+  for (int avg_i = 0; avg_i < amount; avg_i++)
+  {
+    avg = avg + array[avg_i];
+  }
+  avg = avg / amount;
+  return avg;
+}
+
+/**
+* @name       CY_collect_ADC_and_convert
+* @brief      Collect the ADC value and convert to percentage.
+* @param      NONE
+* @return     NONE
+*
+*/
+void CY_collect_ADC_and_convert(void)
+{
+  /* ---------- Get the adc value and convert to percentage. */
+  adc_value = CY_Average_u16(adc_raw_value, sizeof(adc_raw_value));
+  power_percentage = (adc_value / 4096) * 100;
+  if (power_percentage > 100)
+  {
+    power_percentage = 100;
+  }
+  /* ---------- Display percentage */
+  cathode_number[5] = display_number[(power_percentage / 100)];
+  cathode_number[6] = display_number[((power_percentage / 10) % 10)];
+  cathode_number[7] = display_number[(power_percentage / 10)];
+
+  return;
 }
 
 /* USER CODE END 4 */

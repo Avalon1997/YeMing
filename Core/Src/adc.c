@@ -152,7 +152,7 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 float Get_ADC_Value_And_Calculate(void)
 {
   float power_percent = 0;
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t)adc_data, LENGTH_ADC);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_data, LENGTH_ADC);
   power_percent = (adc_data / 4096) * 100;
 
   if (power_percent < 0)

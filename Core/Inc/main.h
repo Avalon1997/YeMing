@@ -58,11 +58,6 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 
-void Determining_Power_Output_Status(void);
-int fputc(int ch,FILE *f);
-void STM32_Init(void);
-void LED_Display_Init(void);
-
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -154,6 +149,13 @@ extern uint8_t minute_count;
 extern uint8_t hour_count;
 extern uint8_t second_count;
 extern uint16_t adc_raw_value[10];
+
+void Determining_Power_Output_Status(void);
+int fputc(int ch,FILE *f);
+void STM32_Init(void);
+void LED_Display_Init(void);
+uint16_t CY_Average_u16(uint16_t array[], int size);
+void CY_collect_ADC_and_convert(void);
 
 /* USER CODE END Private defines */
 

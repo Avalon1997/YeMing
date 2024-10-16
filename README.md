@@ -91,3 +91,4 @@ This sections records the STM32 hardware modules which are used in the developme
 ### Timer
 
 The timer3 is in charge of the countdown task and the timer4 will deal with the time display task.
+

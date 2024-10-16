@@ -67,6 +67,7 @@ static uint8_t display_convert_minutebuffer[2] = {0x00, 0x00};
 
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc1;
+extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 extern DMA_HandleTypeDef hdma_usart1_tx;
@@ -228,12 +229,14 @@ void EXTI1_IRQHandler(void)
   if (GPIO_PIN_SET == HAL_GPIO_ReadPin(PBTN_GPIO_Port,PBTN_Pin))
   {
     global_power_status = POWER_ON;
-    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&adc_raw_value, 10);
+    cathode_number[4] = 0x73;
+    HAL_TIM_Base_Start_IT(&htim1);    // Start thyristor power output.
   }
   else if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PBTN_GPIO_Port,PBTN_Pin))
   {
-    global_power_status == POWER_OFF;
-    HAL_ADC_Stop_DMA(&hadc1);
+    global_power_status = POWER_OFF;
+    cathode_number[4] = 0x00;
+    HAL_TIM_Base_Stop_IT(&htim1);   // Stop thristor power output.
     /*XXXXX Turns off the power output XXXXX*/
   }
 
@@ -300,11 +303,25 @@ void EXTI9_5_IRQHandler(void)
   }
   else if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(TBTN_GPIO_Port,TBTN_Pin))
   {
-    global_timer_status == POWER_OFF;
+    global_timer_status = POWER_OFF;
     global_display_status = DISPLAY_OFF;
   }
 
   /* USER CODE END EXTI9_5_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM1 update interrupt.
+  */
+void TIM1_UP_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_UP_IRQn 0 */
+
+  /* USER CODE END TIM1_UP_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim1);
+  /* USER CODE BEGIN TIM1_UP_IRQn 1 */
+
+  /* USER CODE END TIM1_UP_IRQn 1 */
 }
 
 /**
