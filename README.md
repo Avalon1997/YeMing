@@ -1,19 +1,23 @@
 
 # Preface
 
-This md file is only used for recording the development process and thinking of YeMing product, more details will be seen on my blog wiki column : [YeMing - Multifunctionaltimer](https://www.charlesyu1997.com/wiki/MultiTimer/index.html)
+This README file is only used for recording the development plan, process and thinking of YeMing product. more details will be seen on my blog wiki column : [YeMing - Multifunctionaltimer](https://www.charlesyu1997.com/wiki/MultiTimer/index.html)
 
 # General description
 
-In this section, I only provide brief description of hardware and features about the product YeMing
+YeMing is a kind of household adjustable power timer product. It can control some basic kitchen appliances with adjustable power output, customizable timed power off and real-time display of time and power.
 
 ## Hardware
 
-There are five module making up the entire hardware, power & timer operation module, output & isolation module, audio prompt module, display module and control unit.
+There are six major blocks making up the entire hardware, main control panel, power panel, audio module, output isolation module, LED display module and some keys button.
+
+## Codes
+
+YeMing uses the STM32F103C8T6TR as the control core, all the code is developed on the STM32Cube + Keil MDK + VSCode integrated environment by C language. Perhaps in the future, I will replaces the above-mentioned complex IDE to STM32CubeIDE for development to simplify the process of setting up development environment.
 
 ## Features
 
-- Stepless adjustable pwoer output (0~100%).
+- Stepless adjustable output of power(0~100%).
 - Time setable with key button.
 - Audio prompt.
 - Independent timing and power control.

@@ -53,6 +53,8 @@ static uint16_t second_number = 0x0000U;
 static uint8_t display_convert_hourbuffer[2] = {0x00, 0x00};
 static uint8_t display_convert_minutebuffer[2] = {0x00, 0x00};
 
+int global_second_dot_count;      // Count and flash second dot display.
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -67,7 +69,7 @@ static uint8_t display_convert_minutebuffer[2] = {0x00, 0x00};
 
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc1;
-extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 extern DMA_HandleTypeDef hdma_usart1_tx;
@@ -228,15 +230,15 @@ void EXTI1_IRQHandler(void)
 
   if (GPIO_PIN_SET == HAL_GPIO_ReadPin(PBTN_GPIO_Port,PBTN_Pin))
   {
-    global_power_status = POWER_ON;
+    global_power_status = GS_ON;
     cathode_number[4] = 0x73;
-    HAL_TIM_Base_Start_IT(&htim1);    // Start thyristor power output.
+    HAL_TIM_OnePulse_Start(&htim2, TIM_CHANNEL_4);      // Start the delay single pulse output.
   }
   else if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PBTN_GPIO_Port,PBTN_Pin))
   {
-    global_power_status = POWER_OFF;
+    global_power_status = GS_OFF;
     cathode_number[4] = 0x00;
-    HAL_TIM_Base_Stop_IT(&htim1);   // Stop thristor power output.
+    HAL_TIM_OnePulse_Stop(&htim2, TIM_CHANNEL_4);      // Stop the delay single pulse output.
     /*XXXXX Turns off the power output XXXXX*/
   }
 
@@ -281,7 +283,7 @@ void DMA1_Channel5_IRQHandler(void)
   /* USER CODE END DMA1_Channel5_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_usart1_rx);
   /* USER CODE BEGIN DMA1_Channel5_IRQn 1 */
-
+  
   /* USER CODE END DMA1_Channel5_IRQn 1 */
 }
 
@@ -298,12 +300,12 @@ void EXTI9_5_IRQHandler(void)
 
   if (GPIO_PIN_SET == HAL_GPIO_ReadPin(TBTN_GPIO_Port,TBTN_Pin))
   {
-    global_timer_status = POWER_ON;
+    global_timer_status = GS_ON;
     global_display_status = DISPLAY_ON;
   }
   else if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(TBTN_GPIO_Port,TBTN_Pin))
   {
-    global_timer_status = POWER_OFF;
+    global_timer_status = GS_OFF;
     global_display_status = DISPLAY_OFF;
   }
 
@@ -311,17 +313,17 @@ void EXTI9_5_IRQHandler(void)
 }
 
 /**
-  * @brief This function handles TIM1 update interrupt.
+  * @brief This function handles TIM2 global interrupt.
   */
-void TIM1_UP_IRQHandler(void)
+void TIM2_IRQHandler(void)
 {
-  /* USER CODE BEGIN TIM1_UP_IRQn 0 */
+  /* USER CODE BEGIN TIM2_IRQn 0 */
 
-  /* USER CODE END TIM1_UP_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim1);
-  /* USER CODE BEGIN TIM1_UP_IRQn 1 */
+  /* USER CODE END TIM2_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim2);
+  /* USER CODE BEGIN TIM2_IRQn 1 */
 
-  /* USER CODE END TIM1_UP_IRQn 1 */
+  /* USER CODE END TIM2_IRQn 1 */
 }
 
 /**
@@ -424,11 +426,11 @@ void TIM4_IRQHandler(void)
     }
   }
   // If the TBTN is closed, then display the time.
-  if (global_display_status != DISPLAY_OFF && global_timer_count_status == TIMER_COUNT_OFF)
+  if (global_display_status != DISPLAY_OFF && global_count_status == GS_OFF)
   {
     DynamicDisplay(GPIOB, cathode_select, (uint16_t)cathode_number[cathode_select], second_number);
   }
-  else if(global_display_status != DISPLAY_OFF && global_timer_count_status == TIMER_COUNT_ON)
+  else if(global_display_status != DISPLAY_OFF && global_count_status == GS_ON)
   {
     global_second_dot_count++;
     if (50 == global_second_dot_count)

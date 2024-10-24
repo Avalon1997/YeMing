@@ -35,6 +35,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 /* USER CODE END Includes */
 
@@ -102,17 +103,14 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 
-#define MAXIMUM_KEY_COUNT       (uint16_t)1900  // The max count time of key press.
+#define MAXIMUM_KEY_COUNT       (uint16_t)1000  // The max count time of key press.
 #define MAXIMUM_POWER_OUTPUT    (uint16_t)4096  // The max value of power output.
 
-typedef enum  /* ---------- main switch status */
+typedef enum enum_GeneralStatus
 {
-  POWER_OFF = 0x00U,
-  POWER_ON  = 0x01U
-} enum_PowerStatusTypeDef;
-
-extern enum_PowerStatusTypeDef global_power_status;
-extern enum_PowerStatusTypeDef global_timer_status;
+  GS_ON      = 0x00U,
+  GS_OFF     = 0x01U
+} enum_GeneralStatus;
 
 typedef enum  /* ---------- display status */
 {
@@ -124,8 +122,6 @@ typedef enum  /* ---------- display status */
   DISPLAY_ALL     = 0x05U       // 
 } enum_DisplayStatusTypeDef;
 
-extern enum_DisplayStatusTypeDef global_display_status;
-
 typedef enum  /* ---------- key event */
 {
   KEY_EVENT_NULL    = 0x00U,
@@ -133,18 +129,13 @@ typedef enum  /* ---------- key event */
   KEY_EVENT_HOLD    = 0x02U
 } enum_KeyEventTypeDef;
 
+extern enum_GeneralStatus global_power_status;
+extern enum_GeneralStatus global_timer_status;
+extern enum_GeneralStatus global_count_status;
+extern enum_DisplayStatusTypeDef global_display_status;
 extern enum_KeyEventTypeDef global_key_event;
 
-typedef enum  /* ---------- timer count status */
-{
-  TIMER_COUNT_OFF = 0x00U,
-  TIMER_COUNT_ON  = 0x01U
-} enum_TimerCountStatusTypeDef;
-
-extern enum_TimerCountStatusTypeDef global_timer_count_status;
-
 extern int global_timeout_count;
-extern int global_second_dot_count;
 extern uint8_t minute_count;
 extern uint8_t hour_count;
 extern uint8_t second_count;

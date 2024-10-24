@@ -60,25 +60,45 @@
 
 /* USER CODE BEGIN PV */
 
-enum_PowerStatusTypeDef global_power_status = POWER_OFF;                                // global power output status: Off/On
-enum_PowerStatusTypeDef global_timer_status = POWER_OFF;                                // global timer status : Off/On
+enum_GeneralStatus global_power_status = GS_OFF;
+enum_GeneralStatus global_timer_status = GS_OFF;
+enum_GeneralStatus global_count_status = GS_OFF;
 enum_DisplayStatusTypeDef global_display_status = DISPLAY_OFF;                          // global display clock status: Off/Hour/Minute/All
 enum_KeyEventTypeDef global_key_event = KEY_EVENT_NULL;                                 // global key event: Null/Click/Hold
-enum_TimerCountStatusTypeDef global_timer_count_status = TIMER_COUNT_OFF;               // global timeout counter status: Off/On
 
 int key_count = 0;                          // Time count of button press          
 int global_timeout_count = 0;               // Count and flash hour or minute display.
-int global_second_dot_count = 0;            // Count and flash second dot display.
 int i;                                      // Loop variable
 
-/* ---------- Total time count */
+/* ---------- Time count variables */
 uint8_t minute_count = 0;                   // These three variable are about the time count.
 uint8_t hour_count = 0;                     // The total time count is 
 uint8_t second_count = 0;                   // (minute_count*60 + hour_count*3600 + second_count), in seconds .
 
+/* ---------- ADC collection and power output percentage variables */
 uint16_t adc_raw_value[10] = {0};           // ADC raw value array
 uint16_t adc_value = 0;                     // ADC value in average calculation
-uint8_t power_percentage = 0;                   // The percentage of power output
+int power_percentage = 0;                   // The percentage of power output
+int pulse_delay_counter = 1000;
+// const float C = 48360.5;
+// const float k1 = 4836050;
+// const float k2 = 7696.8;
+// const float k3 = 10.97;
+
+/* ---------- Table of delay time corresponding to percentage */
+const uint16_t delay_time_table[101] = {
+  0, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+999
+};
 
 /* USER CODE END PV */
 
@@ -127,7 +147,7 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM4_Init();
   MX_TIM3_Init();
-  MX_TIM1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -141,12 +161,12 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
     /* ---------- Timer control key scan code */
-    if (POWER_ON == global_timer_status)
-    { // If TBTN is closed
-      if (TIMER_COUNT_OFF == global_timer_count_status)
+    if (GS_ON == global_timer_status)   // If TBTN is closed, enter the key scan code.
+    { 
+      if (GS_OFF == global_count_status)
       {
-        if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
-        { // If the SW is pressed.
+        if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))    // If the SW is pressed.
+        { 
           HAL_Delay(10);
           if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(SW_GPIO_Port,SW_Pin))
           {
@@ -220,8 +240,8 @@ int main(void)
         // If the display is flashing, then we can operate the add and reduce key. 
         if (global_display_status == DISPLAY_HOUR || global_display_status == DISPLAY_MINUTE)
         {
-          if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ADD_GPIO_Port,ADD_Pin))
-          { // If the ADD is pressed.
+          if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ADD_GPIO_Port,ADD_Pin))    // If the ADD is pressed.
+          { 
             HAL_Delay(10);
             if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ADD_GPIO_Port,ADD_Pin))
             {
@@ -330,8 +350,8 @@ int main(void)
               global_key_event = KEY_EVENT_NULL;
             }
           }
-          if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(REDUCE_GPIO_Port,REDUCE_Pin))
-          { // If the REDUCE is pressed. 
+          if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(REDUCE_GPIO_Port,REDUCE_Pin))    // If the REDUCE is pressed. 
+          { 
             HAL_Delay(10);
             if (GPIO_PIN_SET == HAL_GPIO_ReadPin(REDUCE_GPIO_Port,REDUCE_Pin))
             {
@@ -403,7 +423,7 @@ int main(void)
                     }
                   }
                   HAL_Delay(50);
-                  if (20 == key_count)
+                  if (10 == key_count)
                   {
                     if (DISPLAY_MINUTE == global_display_status)
                     {
@@ -442,8 +462,8 @@ int main(void)
           }
         }
       }
-      if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ST_GPIO_Port,ST_Pin))
-      { // If the ST is pressed. 
+      if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ST_GPIO_Port,ST_Pin))    // If the ST is pressed. 
+      { 
         HAL_Delay(10);
         if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(ST_GPIO_Port,ST_Pin))
         { // ST only has the click mode. 
@@ -459,24 +479,24 @@ int main(void)
             }
           }
 
-          if (TIMER_COUNT_OFF == global_timer_count_status)
+          if (GS_OFF == global_count_status)
           {
             // Firstly, check whether the count is equal to 0. 
             if (0 == minute_count && 0 == hour_count)
             {
-              // XXXXX Make the "No count" noise. XXXXX 
-
+              // XXXXX Make the "Count zero" noise. XXXXX 
               // And do nothing.
+
             }
             else 
             {
-              global_timer_count_status = TIMER_COUNT_ON;
+              global_count_status = GS_ON;
               HAL_TIM_Base_Start_IT(&htim3);  // Run the timer.
             }
           }
-          else if (TIMER_COUNT_ON == global_timer_count_status)   
+          else if (GS_ON == global_count_status)   
           {
-            global_timer_count_status = TIMER_COUNT_OFF;
+            global_count_status = GS_OFF;
             HAL_TIM_Base_Stop_IT(&htim3);   // Stop the timer.
           }
         }
@@ -486,10 +506,11 @@ int main(void)
     void CY_collect_ADC_and_convert(void);
 
     /* ---------- Power control key scan code */
-    if (POWER_ON == global_power_status)
+    if (GS_ON == global_power_status)
     {
-      /*XXXXX Calculate the power counter time according voltage percentage and reconfigure tim1 ARR. XXXXX*/
-      
+      /*XXXXX Calculate the power counter time according voltage percentage and reconfigure tim1 ARR. XXXXX*/ 
+      pulse_delay_counter = delay_time_table[power_percentage] ;
+      __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, pulse_delay_counter);
 
     }
     
@@ -571,7 +592,7 @@ int fputc(int ch,FILE *f)
 */
 void Determining_Power_Output_Status(void)
 {
-  if (global_power_status == POWER_ON)
+  if (GS_ON == global_power_status)
   { // Output the current power to the load.
 
   }
@@ -650,6 +671,11 @@ void CY_collect_ADC_and_convert(void)
   {
     power_percentage = 100;
   }
+  else if (power_percentage < 0)
+  {
+    power_percentage = 0;
+  }
+  
   /* ---------- Display percentage */
   cathode_number[5] = display_number[(power_percentage / 100)];
   cathode_number[6] = display_number[((power_percentage / 10) % 10)];
